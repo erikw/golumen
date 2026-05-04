@@ -20,6 +20,8 @@ var defaultBlockedPaths = map[string]struct{}{
 }
 
 func main() {
+	// TODO -v --version
+	// TODO -h --help
 	initLogger(true) // TODO take cli arg --debug or --log-level debug
 	fmt.Println("Welcome to Golumen")
 	matches, err := find(".", "*")

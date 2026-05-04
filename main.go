@@ -8,6 +8,10 @@ import (
 	"path/filepath"
 )
 
+type FindCollector struct {
+	matches []string
+}
+
 var logger *slog.Logger
 
 var defaultBlockedPaths = map[string]struct{}{
@@ -35,6 +39,7 @@ func initLogger(debug bool) {
 		slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 			Level: level,
 			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+				// Remove timestamp from output.
 				if a.Key == slog.TimeKey {
 					return slog.Attr{}
 				}
@@ -53,23 +58,30 @@ func printMatches(matches []string) {
 func find(path string, pattern string) (matches []string, err error) {
 	logger.Info(fmt.Sprintf("💡 Shedding light to %s for %s:\n", path, pattern))
 
-	// TODO does not follow symlinks.
-	err = filepath.WalkDir(path, walkDir)
+	fc := FindCollector{}
+
+	// TODO does not follow symlinks. do if cmdline switch -f/--follow
+	err = filepath.WalkDir(path, fc.walkDir)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO populate from walkDir
-	matches = append(matches, "bogus")
-	return matches, nil
+	return fc.matches, nil
 }
 
-func walkDir(path string, d fs.DirEntry, err error) error {
+func (fc *FindCollector) walkDir(path string, d fs.DirEntry, err error) error {
+	if err != nil {
+		logger.Warn("Could not enter directory. Skipping.", "path", path, "error", err.Error())
+		return filepath.SkipDir
+
+	}
 	skip := blockPath(d.Name())
 	logger.Debug("Walking path", "path", path, "skip", skip)
+
 	if skip {
 		return filepath.SkipDir
 	} else {
+		fc.matches = append(fc.matches, path)
 		return nil
 	}
 }

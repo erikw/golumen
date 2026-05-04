@@ -1,0 +1,89 @@
+package cmd
+
+import (
+	"fmt"
+	"log/slog"
+	"os"
+
+	"github.com/erikw/golumen/find"
+	"github.com/spf13/cobra"
+)
+
+var debug bool
+var logger *slog.Logger
+
+// rootCmd represents the base command when called without any subcommands
+var rootCmd = &cobra.Command{
+	Use:              "golumen",
+	Short:            "Shining a light on your file system.",
+	Long:             `A fast, concurrent CLI file finder written in Go, designed to bring transparency to your directory structures with speed and simplicity.`,
+	PersistentPreRun: preRun,
+	Run:              cmdSearch,
+}
+
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() {
+	err := rootCmd.Execute()
+	if err != nil {
+		os.Exit(1)
+	}
+}
+
+func init() {
+	// Here you will define your flags and configuration settings.
+	// Cobra supports persistent flags, which, if defined here,
+	// will be global for your application.
+
+	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.golumen.yaml)")
+
+	// Cobra also supports local flags, which will only run
+	// when this action is called directly.
+	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug logging")
+	// TODO -v --version
+}
+
+func preRun(cmd *cobra.Command, args []string) {
+	initLogger(debug) // TODO take cli arg --debug or --log-level debug
+}
+
+func initLogger(debug bool) {
+	level := slog.LevelInfo
+	if debug {
+		level = slog.LevelDebug
+	}
+
+	logger = slog.New(
+		slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: level,
+			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+				// Remove timestamp from output.
+				if a.Key == slog.TimeKey {
+					return slog.Attr{}
+				}
+				return a
+			},
+		}),
+	)
+}
+
+func cmdSearch(cmd *cobra.Command, args []string) {
+	fmt.Println("Welcome to Golumen")
+	// fmt.Println("Running cmdSearch")
+	// fmt.Printf("cmd: %v\n", cmd)
+	// fmt.Printf("args: %v\n", args)
+
+	finder := find.New(logger)
+	matches, err := finder.Find(".", "*")
+	if err != nil {
+		fmt.Printf("Error luminating: %v", err)
+	}
+	printMatches(matches)
+}
+
+func printMatches(matches []string) {
+	for _, match := range matches {
+		fmt.Printf("- Match: %s\n", match)
+	}
+}

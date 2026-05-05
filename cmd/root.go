@@ -33,6 +33,7 @@ func Execute() {
 }
 
 func init() {
+	// TODO take path and pattern arguments
 	rootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Show version")
 	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug logging")
 }

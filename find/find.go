@@ -30,6 +30,7 @@ func (f *Finder) Find(path string, pattern string) (matches []string, err error)
 
 	fc := findCollector{logger: f.logger}
 
+	// TODO paralellize with goroutines? Makes sense?
 	err = filepath.WalkDir(path, fc.walkDir)
 	if err != nil {
 		return nil, err

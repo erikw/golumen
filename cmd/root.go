@@ -6,9 +6,11 @@ import (
 	"os"
 
 	"github.com/erikw/golumen/find"
+	"github.com/erikw/golumen/internal/version"
 	"github.com/spf13/cobra"
 )
 
+var showVersion bool
 var debug bool
 var logger *slog.Logger
 
@@ -31,21 +33,12 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.golumen.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Show version")
 	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug logging")
-	// TODO -v --version
 }
 
 func preRun(cmd *cobra.Command, args []string) {
-	initLogger(debug) // TODO take cli arg --debug or --log-level debug
+	initLogger(debug)
 }
 
 func initLogger(debug bool) {
@@ -70,9 +63,13 @@ func initLogger(debug bool) {
 
 func cmdSearch(cmd *cobra.Command, args []string) {
 	fmt.Println("Welcome to Golumen")
-	// fmt.Println("Running cmdSearch")
 	// fmt.Printf("cmd: %v\n", cmd)
 	// fmt.Printf("args: %v\n", args)
+
+	if showVersion {
+		fmt.Printf("Golumen verison: %s\n", version.Version)
+		return
+	}
 
 	finder := find.New(logger)
 	matches, err := finder.Find(".", "*")

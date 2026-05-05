@@ -11,14 +11,9 @@ type Finder struct {
 	logger *slog.Logger
 }
 
-// TODO don't export this type
-type FindCollector struct {
+type findCollector struct {
 	logger  *slog.Logger
 	matches []string
-}
-
-func New(logger *slog.Logger) *Finder {
-	return &Finder{logger: logger}
 }
 
 var defaultBlockedPaths = map[string]struct{}{
@@ -26,12 +21,15 @@ var defaultBlockedPaths = map[string]struct{}{
 	".git": {},
 }
 
+func New(logger *slog.Logger) *Finder {
+	return &Finder{logger: logger}
+}
+
 func (f *Finder) Find(path string, pattern string) (matches []string, err error) {
 	f.logger.Info(fmt.Sprintf("💡 Shedding light to %s for %s:\n", path, pattern))
 
-	fc := FindCollector{logger: f.logger}
+	fc := findCollector{logger: f.logger}
 
-	// TODO does not follow symlinks. do if cmdline switch -f/--follow
 	err = filepath.WalkDir(path, fc.walkDir)
 	if err != nil {
 		return nil, err
@@ -40,7 +38,7 @@ func (f *Finder) Find(path string, pattern string) (matches []string, err error)
 	return fc.matches, nil
 }
 
-func (fc *FindCollector) walkDir(path string, d fs.DirEntry, err error) error {
+func (fc *findCollector) walkDir(path string, d fs.DirEntry, err error) error {
 	if err != nil {
 		fc.logger.Warn("Could not enter directory. Skipping.", "path", path, "error", err.Error())
 		return filepath.SkipDir
@@ -52,12 +50,21 @@ func (fc *FindCollector) walkDir(path string, d fs.DirEntry, err error) error {
 	if skip {
 		return filepath.SkipDir
 	} else {
+		// TODO does not follow symlinks. do if cmdline switch -f/--follow
+		// Need to resolve paths and store traversed to detect infinite recursion
+		// loop and abort
+		// if d.Type()&fs.ModeSymlink != 0 {
+		//        target, err := fs.ReadLink(fsys, path)
+		//        if err != nil {
+		//            return err
+		//        }
+		// here call Find(target,....)
 		fc.matches = append(fc.matches, path)
 		return nil
 	}
 }
 
-func (fc *FindCollector) blockPath(baseName string) bool {
+func (fc *findCollector) blockPath(baseName string) bool {
 	_, ok := defaultBlockedPaths[baseName]
 	fc.logger.Debug("Consider to block file", "baseName", baseName, "block", ok)
 	return ok

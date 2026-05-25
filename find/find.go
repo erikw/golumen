@@ -56,6 +56,7 @@ func (f *Finder) Find(path string, pattern string) (matches []string, err error)
 	return fc.matches, nil
 }
 
+// TODO paralellize with a set of worker go routines?
 func (fc *findCollector) walk(path string, isRoot bool) error {
 	info, err := os.Lstat(path)
 	if err != nil {

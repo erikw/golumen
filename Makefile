@@ -5,7 +5,7 @@ LDFLAGS=-ldflags "-X $(PKG)/internal/version.Version=$(VERSION)"
 
 .PHONY: all build clean run install test release
 
-all: build
+all: build test
 
 build:
 	go build $(LDFLAGS) -o $(BINARY)

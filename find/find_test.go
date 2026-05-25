@@ -116,6 +116,37 @@ func TestFindAvoidsSymlinkLoops(t *testing.T) {
 	}
 }
 
+func TestFindAllowsBlockedRootPath(t *testing.T) {
+	t.Parallel()
+
+	parentDir := t.TempDir()
+	rootDir := filepath.Join(parentDir, ".git")
+	if err := os.MkdirAll(rootDir, 0o755); err != nil {
+		t.Fatalf("creating blocked root directory: %v", err)
+	}
+
+	rootMatchPath := filepath.Join(rootDir, "root-match.go")
+	writeTestFile(t, rootMatchPath)
+
+	nestedBlockedDir := filepath.Join(rootDir, "nested", ".git")
+	if err := os.MkdirAll(nestedBlockedDir, 0o755); err != nil {
+		t.Fatalf("creating nested blocked directory: %v", err)
+	}
+
+	nestedMatchPath := filepath.Join(nestedBlockedDir, "nested-match.go")
+	writeTestFile(t, nestedMatchPath)
+
+	finder := New(testLogger(), false)
+	matches, err := finder.Find(rootDir, `match\.go$`)
+	if err != nil {
+		t.Fatalf("finding under blocked root failed: %v", err)
+	}
+
+	if len(matches) != 1 || matches[0] != rootMatchPath {
+		t.Fatalf("expected explicit blocked root to be searched but nested blocked directory to stay skipped, got %v", matches)
+	}
+}
+
 func testLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(io.Discard, nil))
 }

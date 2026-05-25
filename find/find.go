@@ -68,7 +68,7 @@ func (fc *findCollector) walk(path string, isRoot bool) error {
 	}
 
 	baseName := filepath.Base(path)
-	skip := fc.blockPath(baseName)
+	skip := !isRoot && fc.blockPath(baseName)
 	fc.logger.Debug("Walking path", "path", path, "skip", skip)
 	if skip {
 		return nil

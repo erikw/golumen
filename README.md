@@ -26,11 +26,14 @@ go install github.com/erikw/golumen@latest
 
 ## Usage
 ```bash
-# Walk the current directory
-golumen
+# Walk the current directory for Go files
+golumen '*.go'
+
+# Walk a specific path for Go files
+golumen '*.go' ./cmd
 
 # Enable debug logging
-golumen --debug
+golumen --debug '*.go'
 
 # Show the version
 golumen --version

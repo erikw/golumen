@@ -4,15 +4,19 @@ import "testing"
 
 func TestRootCommandArgs(t *testing.T) {
 	if err := rootCmd.Args(rootCmd, nil); err == nil {
-		t.Fatal("expected missing path argument to fail")
+		t.Fatal("expected missing pattern argument to fail")
 	}
 
-	if err := rootCmd.Args(rootCmd, []string{"."}); err != nil {
-		t.Fatalf("expected single path argument to pass: %v", err)
+	if err := rootCmd.Args(rootCmd, []string{"*.go"}); err != nil {
+		t.Fatalf("expected single pattern argument to pass: %v", err)
 	}
 
-	if err := rootCmd.Args(rootCmd, []string{".", ".."}); err == nil {
-		t.Fatal("expected multiple path arguments to fail")
+	if err := rootCmd.Args(rootCmd, []string{"*.go", "."}); err != nil {
+		t.Fatalf("expected pattern and path arguments to pass: %v", err)
+	}
+
+	if err := rootCmd.Args(rootCmd, []string{"*.go", ".", ".."}); err == nil {
+		t.Fatal("expected more than pattern and optional path to fail")
 	}
 }
 

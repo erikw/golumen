@@ -15,11 +15,11 @@ var logger *slog.Logger
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:              "golumen <path>",
+	Use:              "golumen <pattern> [path]",
 	Short:            "Shining a light on your file system.",
 	Long:             `A fast, concurrent CLI file finder written in Go, designed to bring transparency to your directory structures with speed and simplicity.`,
 	Version:          version.Version,
-	Args:             cobra.ExactArgs(1),
+	Args:             cobra.RangeArgs(1, 2),
 	PersistentPreRun: preRun,
 	Run:              cmdSearch,
 }
@@ -62,14 +62,18 @@ func initLogger(debug bool) {
 }
 
 func cmdSearch(cmd *cobra.Command, args []string) {
-	path := args[0]
+	pattern := args[0]
+	path := "."
+	if len(args) > 1 {
+		path = args[1]
+	}
 
 	fmt.Println("Welcome to Golumen")
 	// fmt.Printf("cmd: %v\n", cmd)
 	// fmt.Printf("args: %v\n", args)
 
 	finder := find.New(logger)
-	matches, err := finder.Find(path, "*")
+	matches, err := finder.Find(path, pattern)
 	if err != nil {
 		fmt.Printf("Error luminating: %v", err)
 	}

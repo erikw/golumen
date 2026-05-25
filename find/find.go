@@ -11,11 +11,14 @@ import (
 
 type Finder struct {
 	logger *slog.Logger
+	follow bool
 }
 
 type findCollector struct {
 	logger       *slog.Logger
 	searchRegexp *regexp.Regexp
+	follow       bool
+	visitedDirs  map[string]struct{}
 	matches      []string
 }
 
@@ -24,8 +27,8 @@ var defaultBlockedPaths = map[string]struct{}{
 	".git": {},
 }
 
-func New(logger *slog.Logger) *Finder {
-	return &Finder{logger: logger}
+func New(logger *slog.Logger, follow bool) *Finder {
+	return &Finder{logger: logger, follow: follow}
 }
 
 func (f *Finder) Find(path string, pattern string) (matches []string, err error) {
@@ -38,10 +41,14 @@ func (f *Finder) Find(path string, pattern string) (matches []string, err error)
 		os.Exit(1)
 	}
 
-	fc := findCollector{logger: f.logger, searchRegexp: r}
+	fc := findCollector{
+		logger:       f.logger,
+		searchRegexp: r,
+		follow:       f.follow,
+		visitedDirs:  make(map[string]struct{}),
+	}
 
-	// TODO paralellize with goroutines? Makes sense?
-	err = filepath.WalkDir(path, fc.walkDir)
+	err = fc.walk(path, true)
 	if err != nil {
 		return nil, err
 	}
@@ -49,31 +56,97 @@ func (f *Finder) Find(path string, pattern string) (matches []string, err error)
 	return fc.matches, nil
 }
 
-func (fc *findCollector) walkDir(path string, d fs.DirEntry, err error) error {
+func (fc *findCollector) walk(path string, isRoot bool) error {
+	info, err := os.Lstat(path)
 	if err != nil {
-		fc.logger.Debug("Could not enter directory. Skipping.", "path", path, "error", err.Error())
-		return filepath.SkipDir
-
+		if isRoot {
+			return err
+		}
+		fc.logger.Debug("Could not stat path. Skipping.", "path", path, "error", err.Error())
+		return nil
 	}
-	skip := fc.blockPath(d.Name())
-	fc.logger.Debug("Walking path", "path", path, "skip", skip)
 
+	baseName := filepath.Base(path)
+	skip := fc.blockPath(baseName)
+	fc.logger.Debug("Walking path", "path", path, "skip", skip)
 	if skip {
-		return filepath.SkipDir
-	} else if fc.patternMatch(d.Name()) {
+		return nil
+	}
+
+	if fc.patternMatch(baseName) {
 		fc.matches = append(fc.matches, path)
 	}
 
-	// TODO does not follow symlinks. do if cmdline switch -f/--follow
-	// Need to resolve paths and store traversed to detect infinite recursion
-	// loop and abort
-	// if d.Type()&fs.ModeSymlink != 0 {
-	//        target, err := fs.ReadLink(fsys, path)
-	//        if err != nil {
-	//            return err
-	//        }
-	// here call Find(target,....)
+	if info.IsDir() {
+		return fc.walkDirectory(path, isRoot)
+	}
+
+	if info.Mode()&fs.ModeSymlink == 0 || !fc.follow {
+		return nil
+	}
+
+	targetInfo, err := os.Stat(path)
+	if err != nil {
+		if isRoot {
+			return err
+		}
+		fc.logger.Debug("Could not resolve symlink target. Skipping.", "path", path, "error", err.Error())
+		return nil
+	}
+
+	if !targetInfo.IsDir() {
+		return nil
+	}
+
+	return fc.walkDirectory(path, isRoot)
+}
+
+func (fc *findCollector) walkDirectory(path string, isRoot bool) error {
+	resolvedPath, err := resolvedPath(path)
+	if err != nil {
+		if isRoot {
+			return err
+		}
+		fc.logger.Debug("Could not resolve directory path. Skipping.", "path", path, "error", err.Error())
+		return nil
+	}
+
+	if _, seen := fc.visitedDirs[resolvedPath]; seen {
+		fc.logger.Debug("Skipping already visited directory", "path", path, "resolvedPath", resolvedPath)
+		return nil
+	}
+	fc.visitedDirs[resolvedPath] = struct{}{}
+
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		if isRoot {
+			return err
+		}
+		fc.logger.Debug("Could not enter directory. Skipping.", "path", path, "error", err.Error())
+		return nil
+	}
+
+	for _, entry := range entries {
+		if err := fc.walk(filepath.Join(path, entry.Name()), false); err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+func resolvedPath(path string) (string, error) {
+	absolutePath, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+
+	resolvedPath, err := filepath.EvalSymlinks(absolutePath)
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Clean(resolvedPath), nil
 }
 
 func (fc *findCollector) blockPath(baseName string) bool {

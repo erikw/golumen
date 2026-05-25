@@ -25,3 +25,18 @@ func TestRootCommandVersionIsConfigured(t *testing.T) {
 		t.Fatal("expected Cobra version support to be configured")
 	}
 }
+
+func TestRootCommandFollowFlagIsConfigured(t *testing.T) {
+	flag := rootCmd.Flags().Lookup("follow")
+	if flag == nil {
+		t.Fatal("expected follow flag to be configured")
+	}
+
+	if flag.Shorthand != "f" {
+		t.Fatalf("expected follow flag shorthand to be f, got %q", flag.Shorthand)
+	}
+
+	if flag.DefValue != "false" {
+		t.Fatalf("expected follow flag default to be false, got %q", flag.DefValue)
+	}
+}

@@ -14,7 +14,8 @@ The name is a portmanteau of the language **Go** and the Latin word **Lumen**, m
 
 
 ## Features
-* **Recursive traversal:** Walks directories with Go's `filepath.WalkDir`.
+* **Recursive traversal:** Walks directory trees recursively and prints matching paths.
+* **Optional symlink following:** Can follow symlinked directories with `-f`/`--follow` while avoiding loops.
 * **Useful defaults:** Skips `.git` directories while traversing.
 * **CLI logging:** Supports debug logging with `--debug`.
 * **Version reporting:** Prints the build version with `--version`.
@@ -31,6 +32,9 @@ golumen '*.go'
 
 # Walk a specific path for Go files
 golumen '*.go' ./cmd
+
+# Follow symlinked directories during traversal
+golumen --follow '*.go' ./cmd
 
 # Enable debug logging
 golumen --debug '*.go'

@@ -68,14 +68,15 @@ func cmdSearch(cmd *cobra.Command, args []string) {
 		path = args[1]
 	}
 
-	fmt.Println("Welcome to Golumen")
+	fmt.Println("Golumen illuminates...")
 	// fmt.Printf("cmd: %v\n", cmd)
 	// fmt.Printf("args: %v\n", args)
 
 	finder := find.New(logger)
 	matches, err := finder.Find(path, pattern)
 	if err != nil {
-		fmt.Printf("Error luminating: %v", err)
+		fmt.Fprintf(os.Stderr, "Error luminating: %v\n", err)
+		os.Exit(1)
 	}
 	printMatches(matches)
 }

@@ -1,24 +1,37 @@
 # Golumen
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/erikw/golumen.svg)](https://pkg.go.dev/github.com/erikw/golumen)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/erikw/golumen)](./go.mod)
+[![Release](https://img.shields.io/github/v/release/erikw/golumen)](https://github.com/erikw/golumen/releases)
+[![License](https://img.shields.io/github/license/erikw/golumen)](./LICENSE)
+
 > Shining a light on your file system.
 
-**Golumen** is a minimalist, high-performance CLI tool for finding files and directories. It is designed to be a modern, Go-based alternative to `find`, focusing on speed through concurrency and clarity through intuitive output.
+**Golumen** is a Go CLI for recursively walking the file system and printing the paths it finds. The project is still early-stage, but already provides a simple searchable foundation with structured logging and versioned releases.
 
 ## Why Golumen?
 The name is a portmanteau of the language **Go** and the Latin word **Lumen**, meaning light or an opening for light. Searching through a deeply nested file system can often feel like navigating a dark labyrinth; Golumen aims to illuminate the path to your data.
 
 
 ## Features
-* **Concurrent Execution:** Utilizes Go routines to traverse directory trees in parallel.
-* **Intuitive Syntax:** Simple command-line arguments that favor human readability.
-* **Smart Defaults:** Automatically respects `.gitignore` and skips hidden directories.
-* **Metric-Driven:** Optimized using `filepath.WalkDir` for minimal system overhead.
+* **Recursive traversal:** Walks directories with Go's `filepath.WalkDir`.
+* **Useful defaults:** Skips `.git` directories while traversing.
+* **CLI logging:** Supports debug logging with `--debug`.
+* **Version reporting:** Prints the build version with `--version`.
+
+## Installation
+```bash
+go install github.com/erikw/golumen@latest
+```
 
 ## Usage
 ```bash
-# Basic search
-golumen "filename"
+# Walk the current directory
+golumen
 
-# Search within a specific directory
-golumen --path ./src "main.go"
+# Enable debug logging
+golumen --debug
+
+# Show the version
+golumen --version
 ```

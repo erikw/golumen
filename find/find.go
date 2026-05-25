@@ -45,7 +45,7 @@ func (fc *findCollector) walkDir(path string, d fs.DirEntry, err error) error {
 		return filepath.SkipDir
 
 	}
-	skip := fc.blockPath(d.Name())
+	skip := fc.blockPath(d.Name()) // TODO match full path or basename on user provided search pattern.
 	fc.logger.Debug("Walking path", "path", path, "skip", skip)
 
 	if skip {

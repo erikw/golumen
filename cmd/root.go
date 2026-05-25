@@ -10,15 +10,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var showVersion bool
 var debug bool
 var logger *slog.Logger
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:              "golumen",
+	Use:              "golumen <path>",
 	Short:            "Shining a light on your file system.",
 	Long:             `A fast, concurrent CLI file finder written in Go, designed to bring transparency to your directory structures with speed and simplicity.`,
+	Version:          version.Version,
+	Args:             cobra.ExactArgs(1),
 	PersistentPreRun: preRun,
 	Run:              cmdSearch,
 }
@@ -33,8 +34,6 @@ func Execute() {
 }
 
 func init() {
-	// TODO take path and pattern arguments
-	rootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Show version")
 	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug logging")
 }
 
@@ -67,13 +66,8 @@ func cmdSearch(cmd *cobra.Command, args []string) {
 	// fmt.Printf("cmd: %v\n", cmd)
 	// fmt.Printf("args: %v\n", args)
 
-	if showVersion {
-		fmt.Printf("Golumen verison: %s\n", version.Version)
-		return
-	}
-
 	finder := find.New(logger)
-	matches, err := finder.Find(".", "*")
+	matches, err := finder.Find(args[0], "*")
 	if err != nil {
 		fmt.Printf("Error luminating: %v", err)
 	}

@@ -35,3 +35,22 @@ golumen --debug
 # Show the version
 golumen --version
 ```
+
+## Testing
+Run the full test suite from the repository root with:
+
+```bash
+make test
+```
+
+This wraps the standard Go command:
+
+```bash
+go test ./...
+```
+
+To run a specific package's tests directly:
+
+```bash
+go test ./cmd
+```

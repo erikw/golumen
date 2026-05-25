@@ -3,6 +3,8 @@ VERSION=$(shell git describe --tags --dirty --always)
 PKG=github.com/erikw/golumen
 LDFLAGS=-ldflags "-X $(PKG)/internal/version.Version=$(VERSION)"
 
+.PHONY: all build clean run install test release
+
 all: build
 
 build:
@@ -17,6 +19,9 @@ run:
 
 install:
 	go install $(LDFLAGS)
+
+test:
+	go test ./...
 
 # Usage: $ make release VERSION=v0.2.0
 release:

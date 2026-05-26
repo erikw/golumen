@@ -147,12 +147,48 @@ func TestFindAllowsBlockedRootPath(t *testing.T) {
 	}
 }
 
+func TestFindReturnsSortedMatches(t *testing.T) {
+	t.Parallel()
+
+	rootDir := t.TempDir()
+
+	expected := []string{
+		filepath.Join(rootDir, "a", "match-2.go"),
+		filepath.Join(rootDir, "b", "match-1.go"),
+		filepath.Join(rootDir, "match-3.go"),
+	}
+
+	writeTestFile(t, expected[1])
+	writeTestFile(t, expected[0])
+	writeTestFile(t, expected[2])
+
+	finder := New(testLogger(), false)
+	matches, err := finder.Find(rootDir, `match-[0-9]+\.go$`)
+	if err != nil {
+		t.Fatalf("finding sorted matches failed: %v", err)
+	}
+
+	if len(matches) != len(expected) {
+		t.Fatalf("expected %d matches, got %v", len(expected), matches)
+	}
+
+	for i := range expected {
+		if matches[i] != expected[i] {
+			t.Fatalf("expected sorted matches %v, got %v", expected, matches)
+		}
+	}
+}
+
 func testLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(io.Discard, nil))
 }
 
 func writeTestFile(t *testing.T, path string) {
 	t.Helper()
+
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatalf("creating parent directory for %q: %v", path, err)
+	}
 
 	if err := os.WriteFile(path, []byte("package test\n"), 0o644); err != nil {
 		t.Fatalf("writing test file %q: %v", path, err)

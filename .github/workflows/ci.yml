@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Build, test, and format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Check formatting
+        shell: bash
+        run: |
+          mapfile -t files < <(git ls-files '*.go')
+
+          if [ "${#files[@]}" -eq 0 ]; then
+            exit 0
+          fi
+
+          unformatted="$(gofmt -l "${files[@]}")"
+
+          if [ -n "${unformatted}" ]; then
+            echo "These files are not formatted with gofmt:"
+            echo "${unformatted}"
+            exit 1
+          fi
+
+      - name: Build
+        run: go build ./...
+
+      - name: Test
+        run: go test ./...

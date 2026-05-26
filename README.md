@@ -2,6 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/erikw/golumen.svg)](https://pkg.go.dev/github.com/erikw/golumen)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/erikw/golumen)](./go.mod)
+[![CI](https://github.com/erikw/golumen/actions/workflows/ci.yml/badge.svg)](https://github.com/erikw/golumen/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/erikw/golumen)](https://github.com/erikw/golumen/releases)
 [![License](https://img.shields.io/github/license/erikw/golumen)](./LICENSE)
 

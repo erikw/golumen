@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 jobs:
-  ci:
-    name: Build, test, and format
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -26,21 +26,24 @@ jobs:
           cache: true
 
       - name: Check formatting
-        shell: bash
-        run: |
-          mapfile -t files < <(git ls-files '*.go')
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v2.12.2
+          args: --disable-all --enable=gofmt
 
-          if [ "${#files[@]}" -eq 0 ]; then
-            exit 0
-          fi
+  test:
+    name: Build and test
+    runs-on: ubuntu-latest
 
-          unformatted="$(gofmt -l "${files[@]}")"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-          if [ -n "${unformatted}" ]; then
-            echo "These files are not formatted with gofmt:"
-            echo "${unformatted}"
-            exit 1
-          fi
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
 
       - name: Build
         run: go build ./...

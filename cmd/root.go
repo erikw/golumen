@@ -87,6 +87,7 @@ func cmdSearch(cmd *cobra.Command, args []string) {
 
 func printMatches(matches []string) {
 	for _, match := range matches {
-		fmt.Printf("- Match: %s\n", match)
+		// fmt.Printf("- Match: %s\n", match)
+		fmt.Printf("%s\n", match)
 	}
 }

@@ -14,8 +14,9 @@ import (
 const defaultWorkerCount = 8
 
 type Finder struct {
-	logger *slog.Logger
-	follow bool
+	logger          *slog.Logger
+	follow          bool
+	caseInsensitive bool
 }
 
 type walkTask struct {
@@ -46,8 +47,8 @@ var defaultBlockedPaths = map[string]struct{}{
 	".git": {},
 }
 
-func New(logger *slog.Logger, follow bool) *Finder {
-	return &Finder{logger: logger, follow: follow}
+func New(logger *slog.Logger, follow bool, caseInsensitive bool) *Finder {
+	return &Finder{logger: logger, follow: follow, caseInsensitive: caseInsensitive}
 }
 
 func (f *Finder) Find(path string, pattern string) (matches []string, err error) {
@@ -55,6 +56,9 @@ func (f *Finder) Find(path string, pattern string) (matches []string, err error)
 
 	var r *regexp.Regexp
 	var rErr error
+	if f.caseInsensitive {
+		pattern = "(?i)" + pattern
+	}
 	if r, rErr = regexp.Compile(pattern); rErr != nil {
 		fmt.Fprintf(os.Stderr, "Invalid regex pattern \"%s\": %v\n", pattern, rErr.Error())
 		os.Exit(1)

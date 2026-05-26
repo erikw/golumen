@@ -12,6 +12,7 @@ import (
 
 var debug bool
 var follow bool
+var caseInsensitive bool
 var logger *slog.Logger
 
 // rootCmd represents the base command when called without any subcommands
@@ -37,6 +38,7 @@ func Execute() {
 func init() {
 	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug logging")
 	rootCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Follow symlinked directories")
+	rootCmd.Flags().BoolVarP(&caseInsensitive, "case-insensitive", "i", false, "Match pattern case-insensitively")
 }
 
 func preRun(cmd *cobra.Command, args []string) {
@@ -74,7 +76,7 @@ func cmdSearch(cmd *cobra.Command, args []string) {
 	// fmt.Printf("cmd: %v\n", cmd)
 	// fmt.Printf("args: %v\n", args)
 
-	finder := find.New(logger, follow)
+	finder := find.New(logger, follow, caseInsensitive)
 	matches, err := finder.Find(path, pattern)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error luminating: %v\n", err)

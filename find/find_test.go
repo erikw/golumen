@@ -23,7 +23,7 @@ func TestFindDoesNotFollowSymlinkedDirectoriesByDefault(t *testing.T) {
 	linkPath := filepath.Join(rootDir, "linked-target")
 	mustSymlink(t, targetDir, linkPath)
 
-	finder := New(testLogger(), false)
+	finder := New(testLogger(), false, false)
 	matches, err := finder.Find(rootDir, `match\.go$`)
 	if err != nil {
 		t.Fatalf("finding without follow failed: %v", err)
@@ -49,7 +49,7 @@ func TestFindFollowsSymlinkedDirectories(t *testing.T) {
 	matchPath := filepath.Join(linkPath, "match.go")
 	writeTestFile(t, filepath.Join(externalDir, "match.go"))
 
-	finder := New(testLogger(), true)
+	finder := New(testLogger(), true, false)
 	matches, err := finder.Find(rootDir, `match\.go$`)
 	if err != nil {
 		t.Fatalf("finding with follow failed: %v", err)
@@ -75,7 +75,7 @@ func TestFindSkipsAlreadyVisitedSymlinkTargets(t *testing.T) {
 	linkPath := filepath.Join(rootDir, "alias")
 	mustSymlink(t, realDir, linkPath)
 
-	finder := New(testLogger(), true)
+	finder := New(testLogger(), true, false)
 	matches, err := finder.Find(rootDir, `match\.go$`)
 	if err != nil {
 		t.Fatalf("finding with duplicate symlink target failed: %v", err)
@@ -105,7 +105,7 @@ func TestFindAvoidsSymlinkLoops(t *testing.T) {
 	loopPath := filepath.Join(realDir, "loop")
 	mustSymlink(t, realDir, loopPath)
 
-	finder := New(testLogger(), true)
+	finder := New(testLogger(), true, false)
 	matches, err := finder.Find(rootDir, `match\.go$`)
 	if err != nil {
 		t.Fatalf("finding with symlink loop failed: %v", err)
@@ -136,7 +136,7 @@ func TestFindAllowsBlockedRootPath(t *testing.T) {
 	nestedMatchPath := filepath.Join(nestedBlockedDir, "nested-match.go")
 	writeTestFile(t, nestedMatchPath)
 
-	finder := New(testLogger(), false)
+	finder := New(testLogger(), false, false)
 	matches, err := finder.Find(rootDir, `match\.go$`)
 	if err != nil {
 		t.Fatalf("finding under blocked root failed: %v", err)
@@ -162,7 +162,7 @@ func TestFindReturnsSortedMatches(t *testing.T) {
 	writeTestFile(t, expected[0])
 	writeTestFile(t, expected[2])
 
-	finder := New(testLogger(), false)
+	finder := New(testLogger(), false, false)
 	matches, err := finder.Find(rootDir, `match-[0-9]+\.go$`)
 	if err != nil {
 		t.Fatalf("finding sorted matches failed: %v", err)

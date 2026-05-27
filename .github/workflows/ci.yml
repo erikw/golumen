@@ -11,23 +11,18 @@ permissions:
   contents: read
 
 jobs:
-  lint:
-    name: Lint
+  golangci:
+    name: lint
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
-          cache: true
-
-      - name: Check formatting
-        uses: golangci/golangci-lint-action@v6
+          go-version: stable
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
         with:
+          version: v2.12
           args: --disable-all --enable=gofmt
 
   test:
